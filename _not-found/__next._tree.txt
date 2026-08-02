@@ -1,2 +1,2 @@
-:HL["/DreamingFish-Website/_next/static/chunks/0ib4hkabvn9n8.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"rH3259fIob-4uKKWq-cnw"}
+:HL["/DreamingFish-Website/_next/static/chunks/0pqhbgox0b7p1.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"PmVC_rHd0MVwi64v8eJdA"}
