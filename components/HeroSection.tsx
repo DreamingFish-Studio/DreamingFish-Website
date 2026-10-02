@@ -1,105 +1,118 @@
 "use client";
 
-import { ArrowDown, Copy, ExternalLink, Sparkles } from "lucide-react";
-import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
-import { FORUM_URL } from "@/lib/constants";
+import Image from "next/image";
+import type { CSSProperties } from "react";
+import { useRef } from "react";
+import { ArrowRight, Copy } from "lucide-react";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { PixelFish } from "@/components/PixelFish";
+import { FORUM_URL, SERVER_ADDRESS } from "@/lib/constants";
 import { withBasePath } from "@/lib/base-path";
 
 type HeroSectionProps = {
   onCopy: () => void;
 };
 
+// Flat blocky clouds, drawn the way the game renders them: one cell per character.
+const CLOUD_SHAPES = [
+  ["......XXXXXX....", "..XXXXXXXXXXXX..", "XXXXXXXXXXXXXXXX", "..XXXXXXXXXXXXX.", "....XXXXXX......"],
+  ["...XXXXX...", ".XXXXXXXXXX", "XXXXXXXXXXX", "..XXXXXX..."],
+  ["........XXXX........", "...XXXXXXXXXXXXX....", "XXXXXXXXXXXXXXXXXXXX", ".XXXXXXXXXXXXXXXXX..", "....XXXXXXX........."]
+];
+
+const clouds = [
+  { shape: 0, top: "7%", cell: 22, duration: 150, delay: -40, opacity: 0.78 },
+  { shape: 1, top: "18%", cell: 16, duration: 120, delay: -95, opacity: 0.6 },
+  { shape: 2, top: "4%", cell: 18, duration: 190, delay: -150, opacity: 0.55 },
+  { shape: 1, top: "27%", cell: 12, duration: 100, delay: -20, opacity: 0.42 }
+];
+
+const stats = [
+  { value: "2021", label: "梦鱼服成立" },
+  { value: "1.20.1", label: "Java 版合作模组生存" },
+  { value: "0", label: "付费强度与特权" }
+];
+
+function PixelCloud({ rows, style }: { rows: string[]; style: CSSProperties }) {
+  return (
+    <svg className="pixel-cloud" style={style} viewBox={`0 0 ${rows[0].length} ${rows.length}`} shapeRendering="crispEdges" aria-hidden="true" focusable="false">
+      {rows.map((row, y) => [...row].map((cell, x) => (cell === "X" ? <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" fill={y === rows.length - 1 ? "#e3ebf3" : "#fff"} /> : null)))}
+    </svg>
+  );
+}
+
 export function HeroSection({ onCopy }: HeroSectionProps) {
+  const heroRef = useRef<HTMLElement>(null);
   const reduceMotion = useReducedMotion();
-  const { scrollY } = useScroll();
-  const y = useTransform(scrollY, [0, 900], [0, reduceMotion ? 0 : 90]);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const worldScale = useTransform(scrollYProgress, [0, 1], [1, reduceMotion ? 1 : 1.18]);
+  const worldY = useTransform(scrollYProgress, [0, 1], [0, reduceMotion ? 0 : 140]);
+  const contentY = useTransform(scrollYProgress, [0, 1], [0, reduceMotion ? 0 : -160]);
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.65], [1, reduceMotion ? 1 : 0]);
 
   return (
-    <section id="home" className="relative flex min-h-screen items-center overflow-hidden px-5 pt-24 sm:px-8 lg:px-10">
-      <motion.div
-        style={{ y, backgroundImage: `url(${withBasePath("/images/hero-dreamingfish.png")})` }}
-        className="absolute inset-0 scale-105 bg-cover bg-center"
-        aria-hidden="true"
-      />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,17,17,.24),rgba(7,17,17,.54)_56%,#071111_100%),radial-gradient(circle_at_50%_42%,rgba(88,219,197,.18),transparent_36rem)]" />
+    <section id="home" ref={heroRef} className="epic">
+      <motion.div className="epic-world" style={{ scale: worldScale, y: worldY }} aria-hidden="true">
+        <div className="panorama">
+          <div className="panorama-track">
+            <Image src={withBasePath("/images/hero-dreamingfish.png")} alt="" fill priority sizes="(min-aspect-ratio: 2/1) 100vw, 200vh" className="panorama-image" />
+          </div>
+        </div>
+      </motion.div>
+      <div className="epic-sky" aria-hidden="true">
+        {clouds.map((cloud, index) => {
+          const rows = CLOUD_SHAPES[cloud.shape];
+          const style = { top: cloud.top, width: rows[0].length * cloud.cell, opacity: cloud.opacity, animationDuration: `${cloud.duration}s`, animationDelay: `${cloud.delay}s` };
+          return <PixelCloud key={index} rows={rows} style={style} />;
+        })}
+      </div>
+      <div className="epic-shade" aria-hidden="true" />
+      <div className="epic-motes" aria-hidden="true">
+        {Array.from({ length: 14 }, (_, index) => <i key={index} style={{ left: `${5 + index * 6.8}%`, top: `${45 + (index * 29) % 50}%`, animationDelay: `${index * -1.4}s`, animationDuration: `${12 + (index % 4) * 2}s` }} />)}
+      </div>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col items-center text-center">
-        <motion.p
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.65 }}
-          className="mb-5 rounded-full border border-white/14 bg-white/8 px-4 py-2 text-sm text-mist/78 backdrop-blur-xl"
-        >
-          DreamingFish Minecraft Server
-        </motion.p>
-        <motion.h1
-          initial={{ opacity: 0, y: 26 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.72, delay: 0.08 }}
-          className="max-w-5xl text-balance text-5xl font-semibold leading-[1.05] tracking-normal text-white sm:text-7xl lg:text-8xl"
-        >
-          欢迎来到梦鱼服
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 22 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.72, delay: 0.18 }}
-          className="mt-7 max-w-5xl text-pretty text-lg leading-8 text-mist/84 sm:text-xl"
-        >
-          一个希望为玩家带来创新体验、多样化模组玩法、长期更新、与玩家共创的公益 Minecraft 社区。
-        </motion.p>
-        <motion.p
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.68, delay: 0.27 }}
-          className="mt-4 max-w-2xl text-pretty text-base leading-7 text-white/58 sm:text-lg"
-        >
-          梦鱼服不想只做一个普通的 Minecraft 服务器。我们希望玩家能在这里共同生活、自由探索，写下属于这个世界的一部分，并在旅途中收获快乐。下一段故事，已经在守望梦屿的风声里悄然启程。
-        </motion.p>
+      <div className="epic-bar">
+        <a href="#home" className="epic-brand">
+          <span className="brand-block"><PixelFish /></span>
+          <span className="pixel">DreamingFish</span>
+        </a>
+        <nav className="epic-links" aria-label="快捷入口">
+          <a href="#dreamhaven">守望梦屿</a>
+          <a href="#join">加入服务器</a>
+          <a href={FORUM_URL} target="_blank" rel="noreferrer">论坛 ↗</a>
+        </nav>
+      </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.65, delay: 0.3 }}
-          className="mt-9 flex w-full max-w-5xl flex-col justify-center gap-3 sm:flex-row sm:flex-wrap lg:flex-nowrap"
-        >
-          <a href="#join" className="soft-button bg-white text-night hover:bg-mist">
-            <ArrowDown size={18} /> 立即加入
-          </a>
-          <a href="#dreamhaven" className="soft-button border-aqua/28 bg-aqua/16 text-white">
-            <Sparkles size={18} /> 守望梦屿预告
-          </a>
-          <button type="button" onClick={onCopy} className="soft-button bg-aqua/10">
-            <Copy size={18} /> 复制服务器地址
+      <motion.div className="epic-center" style={{ y: contentY, opacity: contentOpacity }}>
+        <div className="epic-logo">
+          <h1><span className="logo-3d is-epic" data-text="梦鱼服">梦鱼服</span></h1>
+          <p className="splash">守望梦屿 即将启程！</p>
+        </div>
+        <p className="epic-edition">DreamingFish<i className="pixel-sep" aria-hidden="true" /><span className="sr-only">，</span>Since 2021</p>
+        <p className="epic-tagline">一起，做一场很长的梦。</p>
+        <p className="epic-sub">梦鱼服不想只做一个普通的服务器。在这里，和同伴共同生活、自由探索，把属于你的故事写进这个世界。</p>
+        <div className="epic-actions">
+          <a href="#join" className="mc-btn mc-btn-green epic-play">加入服务器</a>
+          <button type="button" onClick={onCopy} className="epic-ip" aria-label={`复制服务器地址 ${SERVER_ADDRESS}`}>
+            <span className="epic-ip-text">
+              <span className="epic-ip-label">服务器地址</span>
+              <span className="epic-ip-value">{SERVER_ADDRESS}</span>
+            </span>
+            <span className="epic-ip-copy"><Copy size={14} aria-hidden="true" />复制</span>
           </button>
-          <a href={FORUM_URL} target="_blank" rel="noreferrer" className="soft-button">
-            <ExternalLink size={18} /> 进入论坛
-          </a>
-        </motion.div>
+        </div>
+      </motion.div>
 
-        <motion.a
-          href="#dreamhaven"
-          initial={{ opacity: 0, y: 22 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.68, delay: 0.68 }}
-          whileHover={reduceMotion ? undefined : { y: -5 }}
-          className="mt-12 flex w-full max-w-3xl flex-col gap-3 rounded-[2rem] border border-aqua/18 bg-night/36 p-5 text-left shadow-[0_24px_80px_rgba(0,0,0,.28)] backdrop-blur-2xl sm:flex-row sm:items-center sm:justify-between sm:p-6"
-        >
-          <span className="flex items-start gap-3">
-            <span className="mt-1 rounded-full bg-aqua/14 p-2 text-aqua">
-              <Sparkles size={18} />
-            </span>
-            <span>
-              <span className="block text-sm font-semibold text-white">下一周目：守望梦屿</span>
-              <span className="mt-1 block text-sm leading-6 text-mist/66">
-                我们精心打造的下一周目玩法，也是准备向玩家展示的新故事起点。故事将从一片让人慢下来生活、重新开始做梦的温柔之地——梦屿讲起。
-              </span>
-            </span>
-          </span>
-          <span className="inline-flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-aqua">
-            查看预告 <ArrowDown size={16} />
-          </span>
-        </motion.a>
+      <div className="epic-strip">
+        <ul className="epic-stats">
+          <li className="is-news">
+            <a href="#dreamhaven"><strong>NEW</strong><span>下一周目「守望梦屿」预告 <ArrowRight size={14} aria-hidden="true" /></span></a>
+          </li>
+          {stats.map((stat) => (
+            <li key={stat.value}><strong>{stat.value}</strong><span>{stat.label}</span></li>
+          ))}
+        </ul>
+        <a href="#dreamhaven" className="epic-scroll" aria-label="向下进入世界"><span aria-hidden="true">SCROLL</span><i aria-hidden="true" /></a>
       </div>
     </section>
   );

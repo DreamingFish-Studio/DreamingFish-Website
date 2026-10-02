@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { MotionConfig } from "framer-motion";
 import { AboutSection } from "@/components/AboutSection";
 import { ChangelogSection } from "@/components/ChangelogSection";
 import { ClickEffect } from "@/components/ClickEffect";
@@ -21,6 +22,22 @@ export default function Home() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); }, []);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add("is-revealed");
+        observer.unobserve(entry.target);
+      });
+    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.12 });
+    document.querySelectorAll("[data-reveal]").forEach((element) => observer.observe(element));
+    root.classList.add("reveal-ready");
+    return () => { observer.disconnect(); root.classList.remove("reveal-ready"); };
+  }, []);
+
   const showToast = useCallback((message: string) => {
     setToastMessage(message);
     if (timeoutRef.current) {
@@ -39,9 +56,9 @@ export default function Home() {
   }, [showToast]);
 
   return (
-    <>
+    <MotionConfig reducedMotion="user">
       <Navbar onCopy={copyServerAddress} />
-      <main>
+      <main id="main-content">
         <HeroSection onCopy={copyServerAddress} />
         <DreamHavenSection />
         <AboutSection />
@@ -56,6 +73,6 @@ export default function Home() {
       <ClickEffect />
       <MusicPlayer />
       <CopyToast message={toastMessage} />
-    </>
+    </MotionConfig>
   );
 }

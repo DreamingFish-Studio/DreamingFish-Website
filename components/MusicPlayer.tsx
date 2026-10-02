@@ -6,6 +6,8 @@ import { useEffect, useRef, useState } from "react";
 import { withBasePath } from "@/lib/base-path";
 
 const NOTES = ["♪", "♫", "♬", "♩", "♭"];
+// Note particles are tinted like the in-game note block particles.
+const NOTE_COLORS = ["#55ff55", "#ffff55", "#ff7f50", "#ff55ff", "#55ffff", "#8f8fff"];
 const MUSIC_SRC = withBasePath("/audio/bg_music.mp3");
 const MUSIC_STATE_KEY = "dreamingfish:bg-music-state";
 
@@ -211,14 +213,14 @@ export function MusicPlayer() {
   };
 
   return (
-    <div className="fixed bottom-6 right-5 z-[70] sm:right-7">
+    <div className="jukebox-dock">
       <AnimatePresence>
         {needsGesture && !isPlaying ? (
           <motion.div
             initial={{ opacity: 0, y: 8, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.98 }}
-            className="absolute bottom-16 right-0 w-44 rounded-2xl border border-white/12 bg-night/82 px-4 py-3 text-xs leading-5 text-mist/78 shadow-2xl shadow-black/30 backdrop-blur-xl"
+            className="jukebox-hint"
             role="status"
             aria-live="polite"
           >
@@ -227,7 +229,7 @@ export function MusicPlayer() {
         ) : null}
       </AnimatePresence>
 
-      <div className="pointer-events-none absolute bottom-16 left-1/2 h-28 w-28 -translate-x-1/2">
+      <div className="jukebox-notes">
         <AnimatePresence>
           {isPlaying && !reduceMotion
             ? notes.map((item) => (
@@ -240,8 +242,8 @@ export function MusicPlayer() {
                   onAnimationComplete={() => {
                     setNotes((current) => current.filter((note) => note.id !== item.id));
                   }}
-                  className="absolute left-1/2 top-1/2 font-semibold text-aqua drop-shadow-[0_0_14px_rgba(88,219,197,0.55)]"
-                  style={{ fontSize: item.size }}
+                  className="jukebox-note"
+                  style={{ fontSize: item.size, color: NOTE_COLORS[item.id % NOTE_COLORS.length] }}
                   aria-hidden="true"
                 >
                   {item.note}
@@ -254,26 +256,24 @@ export function MusicPlayer() {
       <button
         type="button"
         onClick={toggleMusic}
-        className="focus-ring group relative grid h-14 w-14 place-items-center rounded-full border border-white/15 bg-night/78 text-white shadow-2xl shadow-black/35 backdrop-blur-xl transition hover:border-aqua/50 hover:bg-aqua/12 hover:shadow-glow"
+        className={`jukebox ${isPlaying ? "is-playing" : ""}`}
         aria-label={isPlaying ? "暂停背景音乐" : "播放背景音乐"}
         aria-pressed={isPlaying}
       >
         {needsGesture && !isPlaying ? (
           <motion.span
-            className="absolute inset-0 rounded-full border border-aqua/40"
+            className="jukebox-pulse"
             animate={{ scale: [1, 1.22], opacity: [0.45, 0] }}
             transition={{ duration: 1.55, repeat: Infinity, ease: "easeOut" }}
             aria-hidden="true"
           />
         ) : null}
-        <span className="absolute inset-1 rounded-full border border-aqua/20 opacity-70" aria-hidden="true" />
-        <motion.span
-          className="relative grid h-10 w-10 place-items-center rounded-full bg-white/8 text-aqua"
-          animate={{ rotate: rotation }}
-          transition={{ type: "tween", duration: 0 }}
-        >
-          {isPlaying ? <Pause size={19} aria-hidden="true" /> : <Music size={20} aria-hidden="true" />}
-        </motion.span>
+        <span className="jukebox-slot" aria-hidden="true">
+          <motion.span className="jukebox-disc" animate={{ rotate: rotation }} transition={{ type: "tween", duration: 0 }} />
+        </span>
+        <span className="jukebox-state" aria-hidden="true">
+          {isPlaying ? <Pause size={12} strokeWidth={3} /> : <Music size={12} strokeWidth={3} />}
+        </span>
       </button>
     </div>
   );

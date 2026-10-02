@@ -1,22 +1,29 @@
+import { ArrowUp } from "lucide-react";
+import { PixelFish } from "@/components/PixelFish";
 import { footerLinks } from "@/lib/site-data";
 import { withBasePath } from "@/lib/base-path";
 
 export function Footer() {
   return (
-    <footer className="border-t border-white/10 px-5 py-10 sm:px-8 lg:px-10">
-      <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 md:flex-row md:items-center">
-        <div>
-          <p className="text-lg font-semibold text-white">DreamingFish / 梦鱼服</p>
-          <p className="mt-2 text-sm text-mist/62">合作多模组生存服务器</p>
+    <footer className="dirt-footer">
+      <div className="grass-edge" aria-hidden="true" />
+      <div className="shell footer-inner">
+        <div className="footer-brand">
+          <span className="brand-block is-large"><PixelFish /></span>
+          <div>
+            <p>DreamingFish / 梦鱼服</p>
+            <span>合作多模组生存服务器</span>
+          </div>
         </div>
-        <nav className="flex flex-wrap gap-x-5 gap-y-3" aria-label="页脚导航">
+        <nav aria-label="页脚导航">
           {footerLinks.map((link) => (
-            <a key={link.label} href={withBasePath(link.href)} className="focus-ring rounded-full text-sm text-mist/62 transition hover:text-white">
-              {link.label}
-            </a>
+            <a key={link.label} href={withBasePath(link.href)}>{link.label}</a>
           ))}
         </nav>
-        <p className="text-sm text-mist/45">© 2026 DreamingFish. All rights reserved.</p>
+        <div className="footer-bottom">
+          <p>© 2026 DreamingFish. All rights reserved.</p>
+          <a href="#home" className="mc-btn mc-btn-icon" aria-label="回到首页"><ArrowUp size={18} aria-hidden="true" /></a>
+        </div>
       </div>
     </footer>
   );

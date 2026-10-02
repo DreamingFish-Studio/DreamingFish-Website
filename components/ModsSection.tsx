@@ -1,83 +1,63 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
-import { useMemo, useState } from "react";
-import { cardContainerMotion, cardMotion, modCategories, mods, sectionMotion } from "@/lib/site-data";
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Boxes, Cog, Lamp, Map, Mountain, Swords, Wheat } from "lucide-react";
+import { SectionHead } from "@/components/SectionHead";
+import { modCategories, mods } from "@/lib/site-data";
+
+const modIcons = [Cog, Wheat, Mountain, Lamp, Map, Swords];
+const ease = [0.16, 1, 0.3, 1] as const;
 
 export function ModsSection() {
   const [activeCategory, setActiveCategory] = useState("全部");
-  const reduceMotion = useReducedMotion();
-  const filteredMods = useMemo(
-    () => mods.filter((mod) => activeCategory === "全部" || mod.category === activeCategory),
-    [activeCategory]
-  );
+  const filteredMods = mods.filter((mod) => activeCategory === "全部" || mod.category === activeCategory);
 
   return (
-    <section id="mods" className="section-shell">
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-120px" }}
-        variants={sectionMotion}
-        transition={{ duration: 0.65 }}
-        className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end"
-      >
-        <div>
-          <p className="text-sm font-medium uppercase tracking-[0.22em] text-gold/80">Modpack</p>
-          <h2 className="mt-4 text-4xl font-semibold leading-tight text-white sm:text-5xl">多模组，不只是堆数量</h2>
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-mist/70">
-            我们不会做水槽包式的模组堆砌，而是围绕服务器节奏和守望梦屿的玩法需要挑选内容，并在此基础上进行调整、魔改和必要的自研开发。目标不是把模组越堆越多，而是让每个系统都真正服务于生存、探索、剧情推进与长期稳定体验。
-          </p>
+    <section id="mods" className="mods">
+      <div className="shell">
+        <SectionHead eyebrow="Modpack" index={4} />
+        <div className="section-intro" data-reveal>
+          <h2 className="mc-heading is-left"><span className="logo-3d is-small" data-text="多模组，">多模组，</span><span className="logo-3d is-small is-aqua" data-text="不只是堆数量">不只是堆数量</span></h2>
+          <p>我们不会做水槽包式的模组堆砌，而是围绕服务器节奏和守望梦屿的玩法需要挑选内容，并在此基础上进行调整、魔改和必要的自研开发。目标不是把模组越堆越多，而是让每个系统都真正服务于生存、探索、剧情推进与长期稳定体验。</p>
         </div>
-      </motion.div>
 
-      <div className="mt-8 flex flex-wrap gap-3">
-        {modCategories.map((category) => {
-          const active = activeCategory === category;
-          return (
-            <button
-              key={category}
-              type="button"
-              onClick={() => setActiveCategory(category)}
-              className={`focus-ring rounded-full border px-4 py-2 text-sm transition ${
-                active
-                  ? "border-aqua/50 bg-aqua/18 text-white shadow-glow"
-                  : "border-white/10 bg-white/[0.04] text-mist/70 hover:border-white/22 hover:text-white"
-              }`}
-            >
-              {category}
-            </button>
-          );
-        })}
-      </div>
-
-      <motion.div
-        key={activeCategory}
-        initial="hidden"
-        animate="visible"
-        variants={cardContainerMotion}
-        className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3"
-      >
-        {filteredMods.map((mod) => (
-          <motion.article
-            key={mod.name}
-            variants={cardMotion}
-            whileHover={reduceMotion ? undefined : { y: -5 }}
-            className="glass-card rounded-3xl p-6"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs text-aqua/75">{mod.category}</p>
-                <h3 className="mt-2 text-2xl font-semibold text-white">{mod.name}</h3>
-              </div>
-              {mod.isCore ? (
-                <span className="rounded-full border border-gold/35 bg-gold/12 px-3 py-1 text-xs text-gold">核心</span>
-              ) : null}
+        <div className="creative" data-reveal>
+          <div className="creative-tabs" role="group" aria-label="按模组分类筛选">
+            {modCategories.map((category) => (
+              <button key={category} type="button" onClick={() => setActiveCategory(category)} aria-pressed={activeCategory === category} className={activeCategory === category ? "is-selected" : ""}>
+                {category}
+              </button>
+            ))}
+          </div>
+          <div className="creative-panel">
+            <div className="tooltip-grid" aria-live="polite" aria-atomic="true">
+              <AnimatePresence mode="popLayout" initial={false}>
+                {filteredMods.length ? filteredMods.map((mod) => {
+                  const Icon = modIcons[mods.indexOf(mod)];
+                  return (
+                    <motion.article layout key={mod.name} className={`mc-tooltip ${mod.isCore ? "is-core" : ""}`} initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.94 }} transition={{ duration: 0.4, ease }}>
+                      <div className="tooltip-head">
+                        <span className="tooltip-slot"><Icon size={24} strokeWidth={2} aria-hidden="true" /></span>
+                        <h3>{mod.name}</h3>
+                        {mod.isCore ? <span className="core-tag">核心</span> : null}
+                      </div>
+                      <p>{mod.description}</p>
+                      <span className="tooltip-source">{mod.category}</span>
+                    </motion.article>
+                  );
+                }) : (
+                  <motion.div key="empty" className="creative-empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    <Boxes size={30} strokeWidth={1.8} aria-hidden="true" />
+                    <p>暂无此分类的模组</p>
+                    <button type="button" onClick={() => setActiveCategory("全部")} className="mc-btn mc-btn-sm">查看全部模组</button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-            <p className="mt-5 text-sm leading-7 text-mist/68">{mod.description}</p>
-          </motion.article>
-        ))}
-      </motion.div>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }

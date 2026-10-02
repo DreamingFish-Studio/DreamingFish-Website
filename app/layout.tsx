@@ -1,9 +1,13 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "梦鱼服 DreamingFish",
   description: "Minecraft 合作多模组生存服务器，面向长期社区建设。"
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0b0e14"
 };
 
 export default function RootLayout({

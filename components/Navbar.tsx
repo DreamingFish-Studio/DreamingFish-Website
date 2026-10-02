@@ -1,103 +1,115 @@
 "use client";
 
-import { Menu, Server, X } from "lucide-react";
-import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { Boxes, Copy, DoorOpen, History, Home, ImageIcon, MessagesSquare, Moon, ScrollText, Sparkles } from "lucide-react";
+import { motion, useReducedMotion, useScroll } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { PixelFish } from "@/components/PixelFish";
 import { FORUM_URL } from "@/lib/constants";
 import { navItems } from "@/lib/site-data";
+
+// One icon per hotbar slot, in navItems order.
+const slotIcons = [Home, ScrollText, Sparkles, Moon, Boxes, DoorOpen, ImageIcon, History, MessagesSquare];
 
 type NavbarProps = {
   onCopy: () => void;
 };
 
 export function Navbar({ onCopy }: NavbarProps) {
-  const [scrolled, setScrolled] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [inWorld, setInWorld] = useState(false);
+  const [active, setActive] = useState(0);
+  const [showHeldName, setShowHeldName] = useState(false);
+  const activeRef = useRef(0);
+  const hideNameTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reduceMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 18);
+    // Like the game: the held item's name pops up above the hotbar when the slot changes.
+    const selectSlot = (index: number) => {
+      if (index === activeRef.current) return;
+      activeRef.current = index;
+      setActive(index);
+      setShowHeldName(true);
+      if (hideNameTimer.current) clearTimeout(hideNameTimer.current);
+      hideNameTimer.current = setTimeout(() => setShowHeldName(false), 1800);
+    };
+    const onScroll = () => setInWorld(window.scrollY > window.innerHeight * 0.55);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const index = navItems.findIndex((item) => item.href === `#${entry.target.id}`);
+        if (index >= 0) selectSlot(index);
+      });
+    }, { rootMargin: "-40% 0px -55% 0px" });
+    document.querySelectorAll("main section[id]").forEach((section) => observer.observe(section));
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      observer.disconnect();
+      if (hideNameTimer.current) clearTimeout(hideNameTimer.current);
+    };
   }, []);
 
-  const closeMenu = () => setOpen(false);
+  // Number keys 1–9 select hotbar slots.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      if ((event.target as HTMLElement | null)?.closest("input, textarea, select, [contenteditable='true']")) return;
+      const slot = Number(event.key);
+      if (!Number.isInteger(slot) || slot < 1 || slot > navItems.length) return;
+      const item = navItems[slot - 1];
+      if (item.external) {
+        document.getElementById(`hotbar-slot-${slot}`)?.focus();
+        return;
+      }
+      event.preventDefault();
+      document.querySelector(item.href)?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [reduceMotion]);
 
   return (
-    <header
-      className={`fixed left-0 right-0 top-0 z-50 border-b transition duration-300 ${
-        scrolled || open
-          ? "border-white/10 bg-night/70 shadow-2xl shadow-black/20 backdrop-blur-2xl"
-          : "border-white/0 bg-night/20 backdrop-blur-sm"
-      }`}
-    >
-      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-10" aria-label="主导航">
-        <a href="#home" onClick={closeMenu} className="focus-ring flex items-center gap-3 rounded-full">
-          <span className="grid h-9 w-9 place-items-center rounded-full border border-aqua/30 bg-aqua/10 text-aqua">
-            <Server size={18} aria-hidden="true" />
-          </span>
-          <span className="leading-tight">
-            <span className="block text-sm font-semibold tracking-wide text-white">DreamingFish</span>
-            <span className="block text-xs text-mist/68">梦鱼服</span>
-          </span>
+    <>
+      <a className="skip-link" href="#main-content">跳转到内容</a>
+      <header className={`topbar ${inWorld ? "is-shown" : ""}`}>
+        <a href="#home" className="topbar-brand">
+          <span className="brand-block"><PixelFish /></span>
+          <span className="pixel">DreamingFish</span>
+          <small>梦鱼服</small>
         </a>
-
-        <div className="hidden items-center gap-1 lg:flex">
-          {navItems.map((item) => (
-            <a
-              key={item.label}
-              href={item.external ? FORUM_URL : item.href}
-              target={item.external ? "_blank" : undefined}
-              rel={item.external ? "noreferrer" : undefined}
-              className="focus-ring rounded-full px-3 py-2 text-sm text-mist/75 transition hover:bg-white/8 hover:text-white"
-            >
-              {item.label}
-            </a>
-          ))}
+        <button type="button" onClick={onCopy} className="mc-btn mc-btn-sm"><Copy size={15} aria-hidden="true" />复制服务器地址</button>
+      </header>
+      <nav className={`hotbar-dock ${inWorld ? "is-shown" : ""}`} aria-label="主导航">
+        <div className="xp-row" aria-hidden="true">
+          <span className={`held-name ${showHeldName && inWorld ? "is-visible" : ""}`}>{navItems[active].label}</span>
+          <span className="xp-level">{active + 1}</span>
+          <div className="xp-bar"><motion.i style={{ scaleX: scrollYProgress }} /></div>
         </div>
-
-        <div className="hidden items-center gap-3 lg:flex">
-          <button type="button" onClick={onCopy} className="soft-button py-2">
-            复制服务器地址
-          </button>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setOpen((value) => !value)}
-          className="focus-ring grid h-10 w-10 place-items-center rounded-full border border-white/12 bg-white/8 text-white lg:hidden"
-          aria-label={open ? "关闭菜单" : "打开菜单"}
-          aria-expanded={open}
-        >
-          {open ? <X size={20} /> : <Menu size={20} />}
-        </button>
-      </nav>
-
-      {open ? (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="border-t border-white/10 bg-night/92 px-5 pb-5 pt-3 backdrop-blur-2xl lg:hidden"
-        >
-          <div className="mx-auto grid max-w-7xl gap-1">
-            {navItems.map((item) => (
+        <div className="hotbar">
+          {navItems.map((item, index) => {
+            const Icon = slotIcons[index];
+            const selected = active === index && !item.external;
+            return (
               <a
                 key={item.label}
+                id={`hotbar-slot-${index + 1}`}
                 href={item.external ? FORUM_URL : item.href}
                 target={item.external ? "_blank" : undefined}
                 rel={item.external ? "noreferrer" : undefined}
-                onClick={closeMenu}
-                className="focus-ring rounded-2xl px-4 py-3 text-base text-mist/82 hover:bg-white/8 hover:text-white"
+                className={`hotbar-slot ${selected ? "is-selected" : ""}`}
+                aria-current={selected ? "location" : undefined}
               >
-                {item.label}
+                {selected && <motion.span layoutId="hotbar-select" className="hotbar-select" transition={{ type: "spring", stiffness: 520, damping: 38 }} />}
+                <Icon size={20} strokeWidth={2} aria-hidden="true" />
+                <span className="slot-key" aria-hidden="true">{index + 1}</span>
+                <span className="slot-tip">{item.label}</span>
               </a>
-            ))}
-            <button type="button" onClick={() => { onCopy(); closeMenu(); }} className="soft-button mt-2 w-full">
-              复制服务器地址
-            </button>
-          </div>
-        </motion.div>
-      ) : null}
-    </header>
+            );
+          })}
+        </div>
+      </nav>
+    </>
   );
 }

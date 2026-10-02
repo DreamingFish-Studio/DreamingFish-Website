@@ -1,8 +1,13 @@
 "use client";
 
-import { Copy } from "lucide-react";
-import { motion } from "framer-motion";
-import { cardContainerMotion, cardMotion, joinSteps, sectionMotion } from "@/lib/site-data";
+import { BookOpen, Copy, Download, Gamepad2, MessageCircle } from "lucide-react";
+import { PixelFish } from "@/components/PixelFish";
+import { SectionHead } from "@/components/SectionHead";
+import { heroStats, joinSteps } from "@/lib/site-data";
+import { SERVER_ADDRESS } from "@/lib/constants";
+import { revealDelay } from "@/lib/motion";
+
+const stepIcons = [MessageCircle, BookOpen, Download, Copy, Gamepad2];
 
 type JoinGuideSectionProps = {
   onCopy: () => void;
@@ -10,48 +15,49 @@ type JoinGuideSectionProps = {
 
 export function JoinGuideSection({ onCopy }: JoinGuideSectionProps) {
   return (
-    <section id="join" className="section-shell">
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-120px" }}
-        variants={sectionMotion}
-        transition={{ duration: 0.65 }}
-        className="mx-auto max-w-3xl text-center"
-      >
-        <p className="text-sm font-medium uppercase tracking-[0.22em] text-aqua/80">Join Guide</p>
-        <h2 className="mt-4 text-4xl font-semibold leading-tight text-white sm:text-5xl">加入梦鱼服</h2>
-      </motion.div>
+    <section id="join" className="join">
+      <div className="shell">
+        <SectionHead eyebrow="Join Guide" index={5} />
+        <div className="join-top">
+          <h2 className="mc-heading is-left" data-reveal><span className="logo-3d is-small" data-text="加入梦鱼服">加入梦鱼服</span></h2>
+          <div className="connect-gui" data-reveal>
+            <div className="server-entry">
+              <span className="server-icon"><PixelFish /></span>
+              <div className="server-body">
+                <strong>梦鱼服 DreamingFish</strong>
+                <p className="motd">{heroStats[1]}<i className="pixel-sep" aria-hidden="true" /><span className="sr-only">，</span>{heroStats[2]}</p>
+                <p className="version">{heroStats[0]}</p>
+              </div>
+              <span className="ping" aria-hidden="true"><i /><i /><i /><i /><i /></span>
+            </div>
+            <p className="field-label">复制服务器地址</p>
+            <div className="connect-row">
+              <div className="mc-field"><span>{SERVER_ADDRESS}</span><i className="caret" aria-hidden="true" /></div>
+              <button type="button" onClick={onCopy} className="mc-btn mc-btn-green"><Copy size={16} aria-hidden="true" />复制地址</button>
+            </div>
+          </div>
+        </div>
 
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-100px" }}
-        variants={cardContainerMotion}
-        className="relative mx-auto mt-14 grid max-w-5xl gap-5"
-      >
-        <div className="absolute left-6 top-8 hidden h-[calc(100%-4rem)] w-px bg-gradient-to-b from-aqua/60 via-white/12 to-transparent md:block" />
-        {joinSteps.map((step, index) => (
-          <motion.article
-            key={step.title}
-            variants={cardMotion}
-            className="glass-card relative grid gap-5 rounded-3xl p-6 md:grid-cols-[4rem_1fr_auto] md:items-center"
-          >
-            <div className="grid h-12 w-12 place-items-center rounded-2xl border border-aqua/30 bg-aqua/12 text-lg font-semibold text-aqua">
-              {index + 1}
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold text-white">{step.title}</h3>
-              <p className="mt-2 text-sm leading-7 text-mist/68">{step.description}</p>
-            </div>
-            {step.title === "复制服务器地址" ? (
-              <button type="button" onClick={onCopy} className="soft-button w-full md:w-auto">
-                <Copy size={17} /> 复制地址
-              </button>
-            ) : null}
-          </motion.article>
-        ))}
-      </motion.div>
+        <ol className="adv-tree">
+          {joinSteps.map((step, index) => {
+            const Icon = stepIcons[index];
+            const isGoal = index === joinSteps.length - 1;
+            return (
+              <li key={step.title} className="adv" data-reveal style={revealDelay(index, 140)}>
+                <span className={`adv-frame ${isGoal ? "is-challenge" : ""}`}><Icon size={26} strokeWidth={2} aria-hidden="true" /></span>
+                <div className="adv-text">
+                  <span className="adv-step" aria-hidden="true">0{index + 1}</span>
+                  <h3>{step.title}</h3>
+                  <p>{step.description}</p>
+                  {step.title === "复制服务器地址" ? (
+                    <button type="button" onClick={onCopy} className="mc-btn mc-btn-sm"><Copy size={14} aria-hidden="true" />复制地址</button>
+                  ) : null}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
     </section>
   );
 }
